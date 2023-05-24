@@ -7,7 +7,7 @@ int WINAPI WinMain(
 	_In_ LPSTR lpCmdLine,
 	_In_ int nShowCmd)
 {
-	CreateDebugConsole(L"ImReClass Debug Console");
+	CreateDebugConsole(L"SM Audio Player Debug Console");
 
 	AudioPlayer v_app{};
 	if (!v_app.EnterLoop(L"SM Audio Player"))
