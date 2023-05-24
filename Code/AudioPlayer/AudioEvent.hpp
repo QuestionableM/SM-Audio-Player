@@ -23,6 +23,8 @@ struct EventData
 	using ParameterVector = std::vector<EventParameter>;
 
 	std::string m_name;
+	std::string m_lower_name;
+
 	FMOD::Studio::EventDescription* m_description;
 	FMOD::Studio::EventInstance* m_instance = nullptr;
 
@@ -49,6 +51,8 @@ struct EventDirectory
 	std::string path;
 
 	void RecursiveRender(const std::size_t& recursion_depth);
+	//Deletes all the directories owned by the current event directory
+	void Clear();
 
 	EventDirectory(const std::string& name, const std::string& path);
 	~EventDirectory();

@@ -99,6 +99,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\FMOD\include;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -123,6 +124,7 @@ xcopy /y /d "$(SolutionDir)Dependencies\FMOD\DLL\$(PlatformShortName)\fmodstudio
       <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\FMOD\include;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -147,6 +149,7 @@ xcopy /y /d "$(SolutionDir)Dependencies\FMOD\DLL\$(PlatformShortName)\fmodstudio
       <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\FMOD\include;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -171,6 +174,7 @@ xcopy /y /d "$(SolutionDir)Dependencies\FMOD\DLL\$(PlatformShortName)\fmodstudio
       <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\FMOD\include;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -189,6 +193,8 @@ xcopy /y /d "$(SolutionDir)Dependencies\FMOD\DLL\$(PlatformShortName)\fmodstudio
   <ItemGroup>
     <ClInclude Include="Code\AudioPlayer\AudioEvent.hpp" />
     <ClInclude Include="Code\AudioPlayer\AudioPlayer.hpp" />
+    <ClInclude Include="Code\AudioPlayer\Popups\AboutAppPopup.hpp" />
+    <ClInclude Include="Code\AudioPlayer\Popups\FmodBankLoaderPopup.hpp" />
     <ClInclude Include="Code\imgui_include.hpp" />
     <ClInclude Include="Code\Utils\ConColors.hpp" />
     <ClInclude Include="Code\Utils\Console.hpp" />
@@ -212,6 +218,8 @@ xcopy /y /d "$(SolutionDir)Dependencies\FMOD\DLL\$(PlatformShortName)\fmodstudio
   <ItemGroup>
     <ClCompile Include="Code\AudioPlayer\AudioEvent.cpp" />
     <ClCompile Include="Code\AudioPlayer\AudioPlayer.cpp" />
+    <ClCompile Include="Code\AudioPlayer\Popups\AboutAppPopup.cpp" />
+    <ClCompile Include="Code\AudioPlayer\Popups\FmodBankLoaderPopup.cpp" />
     <ClCompile Include="Code\imgui_include.cpp" />
     <ClCompile Include="Code\main.cpp" />
     <ClCompile Include="Code\Utils\Console.cpp" />

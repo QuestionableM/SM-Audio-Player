@@ -7,12 +7,22 @@
 
 #include <vector>
 
+#define APP_PTR() AudioPlayer::Singleton
+
 class AudioPlayer : public ImGuiApplication
 {
+	friend class BankLoaderPopup;
+
 public:
+	inline static AudioPlayer* Singleton = nullptr;
+
 	AudioPlayer();
 	~AudioPlayer();
 
+	void LoadBankFiles();
+	void Clear();
+
+	void RenderMenuBar();
 	void RenderWindow();
 	void Render();
 
@@ -22,6 +32,9 @@ private:
 	FMOD::Studio::System* m_System = nullptr;
 	FMOD::Studio::Bank* m_masterBank = nullptr;
 	FMOD::Studio::Bank* m_masterBankStrings = nullptr;
+
+	std::string m_fmodBankFile;
+	std::string m_fmodStringsBankFile;
 
 	std::string m_searchStr = {};
 	std::vector<EventData*> m_eventList = {};

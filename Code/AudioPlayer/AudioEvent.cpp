@@ -94,10 +94,8 @@ void EventData::RenderHeader(const std::size_t& id)
 		}
 	}
 
-	for (ParameterVector::iterator iter = m_parameters.begin(); iter != m_parameters.end(); iter++)
+	for (auto& cur_param : m_parameters)
 	{
-		EventParameter& cur_param = (*iter);
-
 		if (!ImGui::SliderFloat(cur_param.name.c_str(), &cur_param.value, cur_param.min_val, cur_param.max_val, "%.5f", ImGuiSliderFlags_None))
 			continue;
 
@@ -132,18 +130,18 @@ void EventDirectory::RecursiveRender(const std::size_t& recursion_depth)
 {
 	std::size_t dir_counter = 0;
 
-	for (EventDirStorage::iterator iter = this->directories.begin(); iter != this->directories.end(); iter++)
+	for (auto& [dir_name, dir_ptr] : this->directories)
 	{
 		ImGui::PushID(static_cast<int>(dir_counter + recursion_depth));
 
-		if (ImGui::CollapsingHeader(iter->second->name.c_str()))
+		if (ImGui::CollapsingHeader(dir_ptr->name.c_str()))
 		{
 			ImGui::Indent(20.0f);
 
-			iter->second->RecursiveRender(recursion_depth + 1);
+			dir_ptr->RecursiveRender(recursion_depth + 1);
 
-			for (std::size_t a = 0; a < iter->second->events.size(); a++)
-				iter->second->events[a]->RenderHeader(a);
+			for (std::size_t a = 0; a < dir_ptr->events.size(); a++)
+				dir_ptr->events[a]->RenderHeader(a);
 
 			ImGui::Unindent(20.0f);
 		}
@@ -154,6 +152,14 @@ void EventDirectory::RecursiveRender(const std::size_t& recursion_depth)
 	}
 }
 
+void EventDirectory::Clear()
+{
+	for (auto& [dir_name, dir_ptr] : this->directories)
+		delete dir_ptr;
+
+	this->directories.clear();
+}
+
 EventDirectory::EventDirectory(const std::string& name, const std::string& path)
 {
 	this->name = name;
@@ -162,6 +168,5 @@ EventDirectory::EventDirectory(const std::string& name, const std::string& path)
 
 EventDirectory::~EventDirectory()
 {
-	for (EventDirStorage::iterator i = this->directories.begin(); i != this->directories.end(); i++)
-		delete i->second;
+	this->Clear();
 }
