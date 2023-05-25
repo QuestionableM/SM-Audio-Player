@@ -35,7 +35,8 @@ struct EventData
 	void Stop();
 	void Start();
 
-	void RenderHeader(const std::size_t& id);
+	void RenderPlaybackButtons();
+	void RenderHeader();
 
 	EventData() = default;
 	~EventData();
@@ -50,7 +51,7 @@ struct EventDirectory
 	std::string name;
 	std::string path;
 
-	void RecursiveRender(const std::size_t& recursion_depth);
+	void RecursiveRender();
 	//Deletes all the directories owned by the current event directory
 	void Clear();
 

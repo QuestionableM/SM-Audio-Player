@@ -144,7 +144,7 @@ void AudioPlayer::LoadBankFiles()
 		last_directory->events.push_back(m_eventList[a]);
 	}
 
-	InfoPopup::Open("Success", "Successfully opened " + std::to_string(m_eventList.size()) + " events");
+	InfoPopup::Open("Success", "Successfully loaded " + std::to_string(m_eventList.size()) + " events");
 }
 
 void AudioPlayer::Clear()
@@ -169,9 +169,9 @@ void AudioPlayer::RenderMenuBar()
 	if (!ImGui::BeginMenuBar())
 		return;
 
-	if (ImGui::BeginMenu("File"))
+	if (ImGui::BeginMenu("Program"))
 	{
-		if (ImGui::MenuItem("Load File"))
+		if (ImGui::MenuItem("Load Bank"))
 		{
 			BankLoaderPopup::Open(
 				[this, &r_bank_path = m_fmodBankFile, &r_bank_strings_path = m_fmodStringsBankFile]
@@ -189,13 +189,28 @@ void AudioPlayer::RenderMenuBar()
 		if (ImGui::MenuItem("Clear Window"))
 			this->Clear();
 
+		ImGui::Separator();
+
+		if (ImGui::MenuItem("About"))
+			AboutPopup::Open();
+
 		ImGui::EndMenu();
 	}
 
-	if (ImGui::MenuItem("About"))
-		AboutPopup::Open();
-
 	ImGui::EndMenuBar();
+}
+
+void RenderTextCentered(const char* text)
+{
+	const ImVec2 v_wnd_sz = ImGui::GetWindowSize();
+	const ImVec2 v_txt_sz = ImGui::CalcTextSize(text);
+
+	ImGui::SetCursorPos({
+		(v_wnd_sz.x	/ 2.0f) - (v_txt_sz.x / 2.0f),
+		(v_wnd_sz.y / 2.0f) - (ImGui::GetTextLineHeightWithSpacing() / 2.0f)
+	});
+
+	ImGui::Text(text);
 }
 
 const static char* g_audioTabData[] = { "Raw Event List", "Directories" };
@@ -203,56 +218,76 @@ void AudioPlayer::RenderWindow()
 {
 	m_System->update();
 
+	if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::GetKeyData(ImGuiKey_F)->DownDuration == 0.0f)
+		ImGui::SetKeyboardFocusHere();
+
+	const std::size_t v_search_sz_before = m_searchStr.size();
 	if (ImGui::InputText("Search Sound", &m_searchStr))
 	{
 		const std::string v_lower_search = String::ToLower(m_searchStr);
-		m_eventSearched.clear();
 
-		for (std::size_t a = 0; a < m_eventList.size(); a++)
+		if (v_lower_search.size() < v_search_sz_before || v_lower_search.size() == 0 || v_search_sz_before == 0)
 		{
-			EventData* cur_event = m_eventList[a];
+			m_eventSearched.clear();
 
-			if (cur_event->m_name.find(v_lower_search) == std::string::npos)
-				continue;
+			for (auto& v_cur_event : m_eventList)
+				if (v_cur_event->m_lower_name.find(v_lower_search) != std::string::npos)
+					m_eventSearched.push_back(v_cur_event);
+		}
+		else
+		{
+			std::size_t v_new_search_sz = 0;
 
-			m_eventSearched.push_back(cur_event);
+			for (auto& v_cur_event : m_eventSearched)
+				if (v_cur_event->m_lower_name.find(v_lower_search) != std::string::npos)
+					m_eventSearched[v_new_search_sz++] = v_cur_event;
+
+			m_eventSearched.resize(v_new_search_sz);
 		}
 	}
 
 	ImGui::BeginTabBar("tab_bar");
 	ImGuiStyle& im_style = ImGui::GetStyle();
 
-	const ImVec4 tab_normal = im_style.Colors[ImGuiCol_Tab];
+	ImVec4& v_tab_color_ref = im_style.Colors[ImGuiCol_Tab];
+	const ImVec4 tab_normal = v_tab_color_ref;
 	const ImVec4 tab_highlight = im_style.Colors[ImGuiCol_TabHovered];
 
 	constexpr int g_audioTabDataSz = sizeof(g_audioTabData) / sizeof(char*);
 	for (int a = 0; a < g_audioTabDataSz; a++)
 	{
-		im_style.Colors[ImGuiCol_Tab] = (a == m_currentPage) ? tab_highlight : tab_normal;
+		v_tab_color_ref = (a == m_currentPage) ? tab_highlight : tab_normal;
 
 		if (ImGui::TabItemButton(g_audioTabData[a]))
 			m_currentPage = a;
 	}
 
-	im_style.Colors[ImGuiCol_Tab] = tab_normal;
+	v_tab_color_ref = tab_normal;
 
 	ImGui::EndTabBar();
 
-	ImGui::BeginChild("event_list_child", { 0.0f, 0.0f }, true);
+	ImVec2 size = ImGui::GetContentRegionAvail();
+	size.x += ImGui::GetStyle().ItemSpacing.x;
+	size.y += ImGui::GetStyle().WindowPadding.y;
 
-	switch (m_currentPage)
+	ImGui::BeginChild("event_list_child", size);
+
+	if (m_currentPage == 1)
 	{
-	case 0:
-		{
-			std::vector<EventData*>& cur_event_vec = (m_eventSearched.empty() ? m_eventList : m_eventSearched);
-			for (std::size_t a = 0; a < cur_event_vec.size(); a++)
-				cur_event_vec[a]->RenderHeader(a);
+		if (m_eventDirRoot->directories.empty())
+			RenderTextCentered("No Directories");
 
-			break;
-		}
-	case 1:
-		m_eventDirRoot->RecursiveRender(0);
-		break;
+		m_eventDirRoot->RecursiveRender();
+	}
+	else
+	{
+		std::vector<EventData*>& v_cur_event_vec = (m_searchStr.empty() ? m_eventList : m_eventSearched);
+
+		if (v_cur_event_vec.empty())
+			RenderTextCentered(m_searchStr.empty() ? "No Events" : "No Results");
+
+		for (auto& v_cur_event : v_cur_event_vec)
+			v_cur_event->RenderHeader();
 	}
 
 	ImGui::EndChild();
@@ -275,6 +310,7 @@ void AudioPlayer::Render()
 		ImGuiWindowFlags_MenuBar
 	);
 
+	m_lineCounter = 0;
 	this->RenderMenuBar();
 	this->RenderWindow();
 

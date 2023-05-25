@@ -1,4 +1,5 @@
 #include "AudioEvent.hpp"
+#include "AudioPlayer/AudioPlayer.hpp"
 
 #include "Utils/Console.hpp"
 
@@ -19,13 +20,12 @@ void EventData::ApplyParameters()
 {
 	if (!m_instance) return;
 
-	for (ParameterVector::const_iterator iter = m_parameters.begin(); iter != m_parameters.end(); iter++)
+	for (const auto& v_curParam : m_parameters)
 	{
-		const EventParameter& v_curParam = (*iter);
-		if (m_instance->setParameterByID(v_curParam.id, v_curParam.value) != FMOD_OK)
-		{
-			DebugErrorL("Couldn't set the value for: ", v_curParam.name);
-		}
+		if (m_instance->setParameterByID(v_curParam.id, v_curParam.value) == FMOD_OK)
+			continue;
+
+		DebugErrorL("Couldn't set the value for: ", v_curParam.name);
 	}
 }
 
@@ -46,53 +46,62 @@ void EventData::Start()
 		return;
 	}
 
-	if (m_description->createInstance(&m_instance) == FMOD_OK)
-	{
-		DebugOutL("Event created: ", m_name);
-
-		this->ApplyParameters();
-		m_instance->start();
-	}
-	else
+	if (m_description->createInstance(&m_instance) != FMOD_OK)
 	{
 		DebugErrorL("Couldn't create event instance: ", m_name);
+		return;
+	}
+
+	DebugOutL("Event created: ", m_name);
+
+	this->ApplyParameters();
+	m_instance->start();
+}
+
+void EventData::RenderPlaybackButtons()
+{
+	if (!this->IsPlaying())
+		return;
+
+	ImGui::SameLine();
+	if (ImGui::Button("Stop Sound"))
+		this->Stop();
+
+	int event_length;
+	if (m_description->getLength(&event_length) != FMOD_OK)
+		return;
+
+	int event_playback_pos;
+	if (m_instance->getTimelinePosition(&event_playback_pos) != FMOD_OK)
+		return;
+
+	int event_changer_test = event_playback_pos;
+	ImGui::SameLine();
+	if (ImGui::SliderInt("Playback", &event_changer_test, 0, event_length, "%d", ImGuiSliderFlags_None))
+	{
+		if (m_instance->setTimelinePosition(event_changer_test) == FMOD_OK)
+		{
+			DebugOutL("Playback set to ", event_changer_test, " / ", event_length);
+		}
 	}
 }
 
-void EventData::RenderHeader(const std::size_t& id)
+void EventData::RenderHeader()
 {
 	if (!ImGui::CollapsingHeader(m_name.c_str()))
 		return;
 
 	ImGui::Indent(15.0f);
-	ImGui::PushID(static_cast<int>(id));
+	ImGui::PushID(APP_PTR()->m_lineCounter++);
 	if (ImGui::Button("Play Sound"))
 		this->Start();
 
-	if (this->IsPlaying())
-	{
-		ImGui::SameLine();
-		if (ImGui::Button("Stop Sound"))
-			this->Stop();
+	ImGui::SameLine();
 
-		int event_length;
-		if (m_description->getLength(&event_length) == FMOD_OK)
-		{
-			int event_playback_pos;
-			if (m_instance->getTimelinePosition(&event_playback_pos) == FMOD_OK)
-			{
-				int event_changer_test = event_playback_pos;
-				ImGui::SameLine();
-				if (ImGui::SliderInt("Playback", &event_changer_test, 0, event_length, "%d", ImGuiSliderFlags_None))
-				{
-					if (m_instance->setTimelinePosition(event_changer_test) == FMOD_OK)
-					{
-						DebugOutL("Playback set to ", event_changer_test, " / ", event_length);
-					}
-				}
-			}
-		}
-	}
+	if (ImGui::Button("Copy Path"))
+		ImGui::SetClipboardText(m_name.c_str());
+
+	this->RenderPlaybackButtons();
 
 	for (auto& cur_param : m_parameters)
 	{
@@ -126,29 +135,25 @@ EventData::~EventData()
 
 
 
-void EventDirectory::RecursiveRender(const std::size_t& recursion_depth)
+void EventDirectory::RecursiveRender()
 {
-	std::size_t dir_counter = 0;
-
 	for (auto& [dir_name, dir_ptr] : this->directories)
 	{
-		ImGui::PushID(static_cast<int>(dir_counter + recursion_depth));
+		ImGui::PushID(APP_PTR()->m_lineCounter++);
 
 		if (ImGui::CollapsingHeader(dir_ptr->name.c_str()))
 		{
 			ImGui::Indent(20.0f);
 
-			dir_ptr->RecursiveRender(recursion_depth + 1);
+			dir_ptr->RecursiveRender();
 
-			for (std::size_t a = 0; a < dir_ptr->events.size(); a++)
-				dir_ptr->events[a]->RenderHeader(a);
+			for (auto& v_cur_event : dir_ptr->events)
+				v_cur_event->RenderHeader();
 
 			ImGui::Unindent(20.0f);
 		}
 
 		ImGui::PopID();
-
-		dir_counter++;
 	}
 }
 
