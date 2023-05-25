@@ -70,6 +70,9 @@ void AboutPopup::Draw()
 
 	ImGui::Text("Build Timestamp: " __TIMESTAMP__);
 
+	ImGui::Spacing();
+	ImGui::Spacing();
+
 	if (ImGui::Button("Ok") || ImGui::IsKeyPressed(ImGuiKey_Escape))
 		ImGui::CloseCurrentPopup();
 
