@@ -84,6 +84,12 @@
     <ClInclude Include="Code\AudioPlayer\Popups\AboutAppPopup.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Code\AudioPlayer\Popups\InfoPopup.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\AudioPlayer\AudioExceptions.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Code\Utils\Console.cpp">
@@ -144,6 +150,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Code\AudioPlayer\Popups\AboutAppPopup.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\AudioPlayer\Popups\InfoPopup.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

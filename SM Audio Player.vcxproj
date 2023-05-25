@@ -192,9 +192,11 @@ xcopy /y /d "$(SolutionDir)Dependencies\FMOD\DLL\$(PlatformShortName)\fmodstudio
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Code\AudioPlayer\AudioEvent.hpp" />
+    <ClInclude Include="Code\AudioPlayer\AudioExceptions.hpp" />
     <ClInclude Include="Code\AudioPlayer\AudioPlayer.hpp" />
     <ClInclude Include="Code\AudioPlayer\Popups\AboutAppPopup.hpp" />
     <ClInclude Include="Code\AudioPlayer\Popups\FmodBankLoaderPopup.hpp" />
+    <ClInclude Include="Code\AudioPlayer\Popups\InfoPopup.hpp" />
     <ClInclude Include="Code\imgui_include.hpp" />
     <ClInclude Include="Code\Utils\ConColors.hpp" />
     <ClInclude Include="Code\Utils\Console.hpp" />
@@ -220,6 +222,7 @@ xcopy /y /d "$(SolutionDir)Dependencies\FMOD\DLL\$(PlatformShortName)\fmodstudio
     <ClCompile Include="Code\AudioPlayer\AudioPlayer.cpp" />
     <ClCompile Include="Code\AudioPlayer\Popups\AboutAppPopup.cpp" />
     <ClCompile Include="Code\AudioPlayer\Popups\FmodBankLoaderPopup.cpp" />
+    <ClCompile Include="Code\AudioPlayer\Popups\InfoPopup.cpp" />
     <ClCompile Include="Code\imgui_include.cpp" />
     <ClCompile Include="Code\main.cpp" />
     <ClCompile Include="Code\Utils\Console.cpp" />

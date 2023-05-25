@@ -2,7 +2,9 @@
 
 #include "Popups/FmodBankLoaderPopup.hpp"
 #include "Popups/AboutAppPopup.hpp"
+#include "Popups/InfoPopup.hpp"
 
+#include "AudioExceptions.hpp"
 #include "Utils/String.hpp"
 
 #include "imgui_include.hpp"
@@ -13,20 +15,13 @@ AudioPlayer::AudioPlayer()
 
 	m_eventDirRoot = new EventDirectory("ROOT", "RootPath:/");
 
-	//TODO: Add proper exceptions
 	FMOD_RESULT fr = FMOD::Studio::System::create(&m_System);
 	if (fr != FMOD_OK)
-	{
-		DebugErrorL("Couldn't create a FMOD Studio System");
-		return;
-	}
+		throw AudioPlayerException("FMOD Fatal Error", "Couldn't create a FMOD Studio System");
 
 	fr = m_System->initialize(32, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL, nullptr);
 	if (fr != FMOD_OK)
-	{
-		DebugErrorL("Couldn't initialize a FMOD Studio System");
-		return;
-	}
+		throw AudioPlayerException("FMOD Fatal Error", "Couldn't initialize a FMOD Studio System");
 }
 
 AudioPlayer::~AudioPlayer()
@@ -52,14 +47,14 @@ void AudioPlayer::LoadBankFiles()
 	FMOD_RESULT fr = m_System->loadBankFile(m_fmodBankFile.c_str(), FMOD_STUDIO_LOAD_BANK_NORMAL, &m_masterBank);
 	if (fr != FMOD_OK)
 	{
-		DebugErrorL("Couldn't load a master bank file");
+		InfoPopup::Open("FMOD Error", "Couldn't loadd a master bank file!");
 		return;
 	}
 
 	fr = m_System->loadBankFile(m_fmodStringsBankFile.c_str(), FMOD_STUDIO_LOAD_BANK_NORMAL, &m_masterBankStrings);
 	if (fr != FMOD_OK)
 	{
-		DebugErrorL("Couldn't load a master bank strings file");
+		InfoPopup::Open("FMOD Error", "Couldn't load a master bank strings file!");
 		return;
 	}
 
@@ -71,7 +66,7 @@ void AudioPlayer::LoadBankFiles()
 
 	if (m_masterBank->getEventList(m_EventDescList.data(), event_count, &event_count) != FMOD_OK)
 	{
-		DebugErrorL("Couldn't get the event list");
+		InfoPopup::Open("FMOD Error", "Couldn't get the event list");
 		return;
 	}
 
@@ -148,6 +143,8 @@ void AudioPlayer::LoadBankFiles()
 
 		last_directory->events.push_back(m_eventList[a]);
 	}
+
+	InfoPopup::Open("Success", "Successfully opened " + std::to_string(m_eventList.size()) + " events");
 }
 
 void AudioPlayer::Clear()
@@ -283,6 +280,7 @@ void AudioPlayer::Render()
 
 	BankLoaderPopup::Draw();
 	AboutPopup::Draw();
+	InfoPopup::Draw();
 
 	ImGui::End();
 }

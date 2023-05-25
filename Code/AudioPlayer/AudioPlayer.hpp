@@ -12,6 +12,7 @@
 class AudioPlayer : public ImGuiApplication
 {
 	friend class BankLoaderPopup;
+	friend class InfoPopup;
 
 public:
 	inline static AudioPlayer* Singleton = nullptr;
