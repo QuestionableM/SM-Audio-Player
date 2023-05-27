@@ -29,12 +29,9 @@ AudioPlayer::~AudioPlayer()
 	if (m_eventDirRoot)
 		delete m_eventDirRoot;
 
-	for (auto& v_event : m_eventList)
-		delete v_event;
-
-	m_eventList.clear();
-	m_eventSearched.clear();
-	m_searchStr.clear();
+	m_eventList.ClearMemory();
+	m_busList.ClearMemory();
+	m_vcaList.ClearMemory();
 
 	if (m_System)
 		m_System->release();
@@ -61,38 +58,35 @@ void AudioPlayer::LoadBankFiles()
 	int event_count;
 	m_masterBank->getEventCount(&event_count);
 
-	std::vector<FMOD::Studio::EventDescription*> m_EventDescList;
-	m_EventDescList.resize(static_cast<std::size_t>(event_count));
-
-	if (m_masterBank->getEventList(m_EventDescList.data(), event_count, &event_count) != FMOD_OK)
+	std::vector<FMOD::Studio::EventDescription*> v_eventDescList(static_cast<std::size_t>(event_count));
+	if (m_masterBank->getEventList(v_eventDescList.data(), static_cast<int>(v_eventDescList.size()), &event_count) != FMOD_OK)
 	{
 		InfoPopup::Open("FMOD Error", "Couldn't get the event list");
 		return;
 	}
 
-	for (std::size_t a = 0; a < m_EventDescList.size(); a++)
+	//Load actual fmod events
+	for (FMOD::Studio::EventDescription* v_cur_desc : v_eventDescList)
 	{
-		FMOD::Studio::EventDescription* cur_desc = m_EventDescList[a];
-
 		char v_path_buffer[512];
 		int v_path_sz;
-		if (cur_desc->getPath(v_path_buffer, sizeof(v_path_buffer), &v_path_sz) != FMOD_OK)
+		if (v_cur_desc->getPath(v_path_buffer, sizeof(v_path_buffer), &v_path_sz) != FMOD_OK)
 			continue;
 
 		EventData* new_event = new EventData();
-		new_event->m_description = cur_desc;
+		new_event->m_description = v_cur_desc;
 
 		new_event->m_name = std::string(v_path_buffer, static_cast<std::size_t>(v_path_sz));
 		new_event->m_lower_name = String::ToLower(new_event->m_name);
 
 		int event_param_count;
-		if (cur_desc->getParameterDescriptionCount(&event_param_count) != FMOD_OK)
+		if (v_cur_desc->getParameterDescriptionCount(&event_param_count) != FMOD_OK)
 			continue;
 
 		for (int b = 0; b < event_param_count; b++)
 		{
 			FMOD_STUDIO_PARAMETER_DESCRIPTION param_desc;
-			if (cur_desc->getParameterDescriptionByIndex(b, &param_desc) != FMOD_OK)
+			if (v_cur_desc->getParameterDescriptionByIndex(b, &param_desc) != FMOD_OK)
 				continue;
 
 			if (param_desc.type != FMOD_STUDIO_PARAMETER_TYPE::FMOD_STUDIO_PARAMETER_GAME_CONTROLLED)
@@ -108,15 +102,12 @@ void AudioPlayer::LoadBankFiles()
 			});
 		}
 
-		m_eventList.push_back(new_event);
+		m_eventList.storage.push_back(new_event);
 	}
 
-
 	//Sort all events and create directories with events
-	for (std::size_t a = 0; a < m_eventList.size(); a++)
+	for (EventData* cur_event : m_eventList.storage)
 	{
-		const EventData* cur_event = m_eventList[a];
-
 		EventDirectory* last_directory = m_eventDirRoot;
 
 		std::size_t last_sep = 0;
@@ -141,27 +132,129 @@ void AudioPlayer::LoadBankFiles()
 			last_sep = idx + 1;
 		}
 
-		last_directory->events.push_back(m_eventList[a]);
+		last_directory->events.push_back(cur_event);
 	}
 
-	InfoPopup::Open("Success", "Successfully loaded " + std::to_string(m_eventList.size()) + " events");
+	//Load all the busses
+	int v_bus_count;
+	m_masterBank->getBusCount(&v_bus_count);
+
+	std::vector<FMOD::Studio::Bus*> v_busList(static_cast<std::size_t>(v_bus_count));
+	if (m_masterBank->getBusList(v_busList.data(), static_cast<int>(v_busList.size()), &v_bus_count) != FMOD_OK)
+	{
+		InfoPopup::Open("FMOD Error", "Couldn't get the bus list");
+		return;
+	}
+
+	for (FMOD::Studio::Bus* v_cur_bus : v_busList)
+	{
+		char v_path_buffer[512];
+		int v_path_sz;
+		if (v_cur_bus->getPath(v_path_buffer, sizeof(v_path_buffer), &v_path_sz) != FMOD_OK)
+			continue;
+
+		BusData* v_bus_data = new BusData();
+		v_bus_data->name = std::string(v_path_buffer, static_cast<std::size_t>(v_path_sz));
+		v_bus_data->m_lower_name = String::ToLower(v_bus_data->name);
+
+		v_bus_data->m_bus = v_cur_bus;
+
+		m_busList.storage.push_back(v_bus_data);
+	}
+
+	//Load all the VCA
+	int v_vca_count;
+	m_masterBank->getVCACount(&v_vca_count);
+
+	std::vector<FMOD::Studio::VCA*> v_vcaList(static_cast<std::size_t>(v_vca_count));
+	if (m_masterBank->getVCAList(v_vcaList.data(), static_cast<int>(v_vcaList.size()), &v_vca_count) != FMOD_OK)
+	{
+		InfoPopup::Open("FMOD Error", "Couldn't get the vca list");
+		return;
+	}
+
+	for (FMOD::Studio::VCA* v_cur_vca : v_vcaList)
+	{
+		char v_path_buffer[512];
+		int v_path_sz;
+		if (v_cur_vca->getPath(v_path_buffer, sizeof(v_path_buffer), &v_path_sz) != FMOD_OK)
+			continue;
+
+		VcaData* v_vca_data = new VcaData();
+		v_vca_data->name = std::string(v_path_buffer, static_cast<std::size_t>(v_path_sz));
+		v_vca_data->m_lower_name = String::ToLower(v_vca_data->name);
+
+		v_vca_data->m_vca = v_cur_vca;
+
+		m_vcaList.storage.push_back(v_vca_data);
+	}
+
+	const char* v_formatted_str = String::FormatCStr("Successfully loaded:\n%llu events\n%llu BUSes\n%llu VCAs",
+		m_eventList.storage.size(), m_busList.storage.size(), m_vcaList.storage.size());
+
+	InfoPopup::Open("Success", v_formatted_str);
 }
 
 void AudioPlayer::Clear()
 {
 	m_eventDirRoot->Clear();
 
-	for (auto& v_event : m_eventList)
-		delete v_event;
-
-	m_eventList.clear();
-	m_eventSearched.clear();
-	m_searchStr.clear();
+	m_eventList.ClearMemory();
+	m_busList.ClearMemory();
+	m_vcaList.ClearMemory();
 
 	if (m_System->unloadAll() != FMOD_OK)
 	{
 		DebugErrorL("Something went wrong while trying to unload all FMOD resources");
 	}
+}
+
+void RenderTextCentered(const char* text)
+{
+	const ImVec2 v_wnd_sz = ImGui::GetWindowSize();
+	const ImVec2 v_txt_sz = ImGui::CalcTextSize(text);
+
+	ImGui::SetCursorPos({
+		(v_wnd_sz.x / 2.0f) - (v_txt_sz.x / 2.0f),
+		(v_wnd_sz.y / 2.0f) - (ImGui::GetTextLineHeightWithSpacing() / 2.0f)
+	});
+
+	ImGui::Text(text);
+}
+
+void AudioPlayer::RenderEventsTab()
+{
+	if (m_eventList.GetVector().empty())
+		RenderTextCentered(m_eventList.search_str.empty() ? "No Events" : "No Results");
+
+	for (auto& v_cur_event : m_eventList.GetVector())
+		v_cur_event->RenderHeader();
+}
+
+void AudioPlayer::RenderEventDirectoriesTab()
+{
+	if (m_eventDirRoot->directories.empty())
+		RenderTextCentered("No Directories");
+
+	m_eventDirRoot->RecursiveRender();
+}
+
+void AudioPlayer::RenderBUSTab()
+{
+	if (m_busList.GetVector().empty())
+		RenderTextCentered(m_busList.search_str.empty() ? "No BUS data" : "No Results");
+
+	for (BusData* v_cur_bus : m_busList.GetVector())
+		v_cur_bus->RenderHeader();
+}
+
+void AudioPlayer::RenderVCATab()
+{
+	if (m_vcaList.GetVector().empty())
+		RenderTextCentered(m_vcaList.search_str.empty() ? "No VCA data" : "No Results");
+
+	for (VcaData* v_cur_bus : m_vcaList.GetVector())
+		v_cur_bus->RenderHeader();
 }
 
 void AudioPlayer::RenderMenuBar()
@@ -200,20 +293,17 @@ void AudioPlayer::RenderMenuBar()
 	ImGui::EndMenuBar();
 }
 
-void RenderTextCentered(const char* text)
+using t_cur_tab_func = void (AudioPlayer::*)(void);
+
+const static char* g_audioTabData[] = { "Events", "Sorted Events", "BUS", "VCA" };
+const t_cur_tab_func g_audioFuncData[] =
 {
-	const ImVec2 v_wnd_sz = ImGui::GetWindowSize();
-	const ImVec2 v_txt_sz = ImGui::CalcTextSize(text);
+	&AudioPlayer::RenderEventsTab,
+	&AudioPlayer::RenderEventDirectoriesTab,
+	&AudioPlayer::RenderBUSTab,
+	&AudioPlayer::RenderVCATab
+};
 
-	ImGui::SetCursorPos({
-		(v_wnd_sz.x	/ 2.0f) - (v_txt_sz.x / 2.0f),
-		(v_wnd_sz.y / 2.0f) - (ImGui::GetTextLineHeightWithSpacing() / 2.0f)
-	});
-
-	ImGui::Text(text);
-}
-
-const static char* g_audioTabData[] = { "Raw Event List", "Directories" };
 void AudioPlayer::RenderWindow()
 {
 	m_System->update();
@@ -221,29 +311,20 @@ void AudioPlayer::RenderWindow()
 	if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::GetKeyData(ImGuiKey_F)->DownDuration == 0.0f)
 		ImGui::SetKeyboardFocusHere();
 
-	const std::size_t v_search_sz_before = m_searchStr.size();
-	if (ImGui::InputText("Search Sound", &m_searchStr))
+	switch (m_curTabIdx)
 	{
-		const std::string v_lower_search = String::ToLower(m_searchStr);
-
-		if (v_lower_search.size() < v_search_sz_before || v_lower_search.size() == 0 || v_search_sz_before == 0)
-		{
-			m_eventSearched.clear();
-
-			for (auto& v_cur_event : m_eventList)
-				if (v_cur_event->m_lower_name.find(v_lower_search) != std::string::npos)
-					m_eventSearched.push_back(v_cur_event);
-		}
-		else
-		{
-			std::size_t v_new_search_sz = 0;
-
-			for (auto& v_cur_event : m_eventSearched)
-				if (v_cur_event->m_lower_name.find(v_lower_search) != std::string::npos)
-					m_eventSearched[v_new_search_sz++] = v_cur_event;
-
-			m_eventSearched.resize(v_new_search_sz);
-		}
+	case 0:
+		m_eventList.RenderInputBox("Search Event");
+		break;
+	case 2:
+		m_busList.RenderInputBox("Search Bus");
+		break;
+	case 3:
+		m_vcaList.RenderInputBox("Search Vca");
+		break;
+	default:
+		ImGui::Text("Search Not Available");
+		break;
 	}
 
 	ImGui::BeginTabBar("tab_bar");
@@ -256,10 +337,13 @@ void AudioPlayer::RenderWindow()
 	constexpr int g_audioTabDataSz = sizeof(g_audioTabData) / sizeof(char*);
 	for (int a = 0; a < g_audioTabDataSz; a++)
 	{
-		v_tab_color_ref = (a == m_currentPage) ? tab_highlight : tab_normal;
+		v_tab_color_ref = (m_curTabFunc == g_audioFuncData[a]) ? tab_highlight : tab_normal;
 
 		if (ImGui::TabItemButton(g_audioTabData[a]))
-			m_currentPage = a;
+		{
+			m_curTabFunc = g_audioFuncData[a];
+			m_curTabIdx = a;
+		}
 	}
 
 	v_tab_color_ref = tab_normal;
@@ -268,28 +352,9 @@ void AudioPlayer::RenderWindow()
 
 	ImVec2 size = ImGui::GetContentRegionAvail();
 	size.x += ImGui::GetStyle().ItemSpacing.x;
-	size.y += ImGui::GetStyle().WindowPadding.y;
 
 	ImGui::BeginChild("event_list_child", size);
-
-	if (m_currentPage == 1)
-	{
-		if (m_eventDirRoot->directories.empty())
-			RenderTextCentered("No Directories");
-
-		m_eventDirRoot->RecursiveRender();
-	}
-	else
-	{
-		std::vector<EventData*>& v_cur_event_vec = (m_searchStr.empty() ? m_eventList : m_eventSearched);
-
-		if (v_cur_event_vec.empty())
-			RenderTextCentered(m_searchStr.empty() ? "No Events" : "No Results");
-
-		for (auto& v_cur_event : v_cur_event_vec)
-			v_cur_event->RenderHeader();
-	}
-
+	(this->*m_curTabFunc)();
 	ImGui::EndChild();
 }
 

@@ -3,6 +3,7 @@
 #include "Window/Application.hpp"
 #include <fmod/fmod_studio.hpp>
 
+#include "SearchVector.hpp"
 #include "AudioEvent.hpp"
 
 #include <vector>
@@ -25,12 +26,20 @@ public:
 	void LoadBankFiles();
 	void Clear();
 
+	//Tab rendering functions
+	void RenderEventsTab();
+	void RenderEventDirectoriesTab();
+	void RenderBUSTab();
+	void RenderVCATab();
+
 	void RenderMenuBar();
 	void RenderWindow();
 	void Render();
 
 private:
-	int m_currentPage = 0;
+	using t_current_tab_func_ptr = void (AudioPlayer::*)(void);
+	t_current_tab_func_ptr m_curTabFunc = &AudioPlayer::RenderEventsTab;
+	int m_curTabIdx = 0;
 
 	FMOD::Studio::System* m_System = nullptr;
 	FMOD::Studio::Bank* m_masterBank = nullptr;
@@ -39,9 +48,9 @@ private:
 	std::string m_fmodBankFile;
 	std::string m_fmodStringsBankFile;
 
-	std::string m_searchStr = {};
-	std::vector<EventData*> m_eventList = {};
-	std::vector<EventData*> m_eventSearched = {};
+	SearchVector<EventData> m_eventList;
+	SearchVector<BusData> m_busList;
+	SearchVector<VcaData> m_vcaList;
 
 	EventDirectory* m_eventDirRoot = nullptr;
 };

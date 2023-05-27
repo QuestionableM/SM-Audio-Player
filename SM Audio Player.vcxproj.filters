@@ -90,6 +90,9 @@
     <ClInclude Include="Code\AudioPlayer\AudioExceptions.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Code\AudioPlayer\SearchVector.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Code\Utils\Console.cpp">

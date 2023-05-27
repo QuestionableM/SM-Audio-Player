@@ -58,3 +58,29 @@ struct EventDirectory
 	EventDirectory(const std::string& name, const std::string& path);
 	~EventDirectory();
 };
+
+struct BusData
+{
+	std::string name;
+	std::string m_lower_name;
+
+	FMOD::Studio::Bus* m_bus;
+
+	void RenderHeader();
+
+	BusData() = default;
+	~BusData() = default;
+};
+
+struct VcaData
+{
+	std::string name;
+	std::string m_lower_name;
+
+	FMOD::Studio::VCA* m_vca;
+
+	void RenderHeader();
+
+	VcaData() = default;
+	~VcaData() = default;
+};

@@ -175,3 +175,63 @@ EventDirectory::~EventDirectory()
 {
 	this->Clear();
 }
+
+
+
+
+void BusData::RenderHeader()
+{
+	ImGui::PushID(APP_PTR()->m_lineCounter++);
+
+	if (ImGui::CollapsingHeader(name.c_str()))
+	{
+		ImGui::Indent(20.0f);
+
+		float v_volume;
+		m_bus->getVolume(&v_volume);
+		if (ImGui::SliderFloat("Volume", &v_volume, 0.0f, 10.0f))
+			m_bus->setVolume(v_volume);
+
+		bool is_muted;
+		m_bus->getMute(&is_muted);
+		if (ImGui::Checkbox("Mute", &is_muted))
+			m_bus->setMute(is_muted);
+
+		bool v_paused;
+		m_bus->getPaused(&v_paused);
+		if (ImGui::Checkbox("Paused", &v_paused))
+			m_bus->setPaused(v_paused);
+
+		FMOD::ChannelGroup* v_group;
+		if (m_bus->getChannelGroup(&v_group) == FMOD_OK)
+		{
+			float v_pitch;
+			v_group->getPitch(&v_pitch);
+			if (ImGui::SliderFloat("Pitch", &v_pitch, 0.0f, 1.0f))
+				v_group->setPitch(v_pitch);
+		}
+
+		ImGui::Unindent(20.0f);
+	}
+
+	ImGui::PopID();
+}
+
+void VcaData::RenderHeader()
+{
+	ImGui::PushID(APP_PTR()->m_lineCounter++);
+
+	if (ImGui::CollapsingHeader(name.c_str()))
+	{
+		ImGui::Indent();
+
+		float v_volume;
+		m_vca->getVolume(&v_volume);
+		if (ImGui::SliderFloat("Volume", &v_volume, 0.0f, 1.0f))
+			m_vca->setVolume(v_volume);
+
+		ImGui::Unindent();
+	}
+
+	ImGui::PopID();
+}

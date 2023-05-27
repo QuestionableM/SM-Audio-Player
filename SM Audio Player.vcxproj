@@ -197,6 +197,7 @@ xcopy /y /d "$(SolutionDir)Dependencies\FMOD\DLL\$(PlatformShortName)\fmodstudio
     <ClInclude Include="Code\AudioPlayer\Popups\AboutAppPopup.hpp" />
     <ClInclude Include="Code\AudioPlayer\Popups\FmodBankLoaderPopup.hpp" />
     <ClInclude Include="Code\AudioPlayer\Popups\InfoPopup.hpp" />
+    <ClInclude Include="Code\AudioPlayer\SearchVector.hpp" />
     <ClInclude Include="Code\imgui_include.hpp" />
     <ClInclude Include="Code\Utils\ConColors.hpp" />
     <ClInclude Include="Code\Utils\Console.hpp" />
